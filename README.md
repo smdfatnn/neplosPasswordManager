@@ -11,4 +11,4 @@ To-Do list:
 - Password encryption
 - Saving properties
 
-[!Screenshot](https://i.imgur.com/FZXO6Rh.png)
+![ScreenShot](https://i.imgur.com/FZXO6Rh.png)
