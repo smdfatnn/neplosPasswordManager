@@ -1,10 +1,10 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using System.Collections.Generic;
 
 namespace neplosPasswordManager
 {
@@ -18,10 +18,11 @@ namespace neplosPasswordManager
         string lowercaseSymbols = "qwertyuiopasdfghjklzxcvbnm";
         string uppercaseSymbols = "QWERTYUIOPASDFGHJKLZXCVBNM";
         string numbers = "1234567890";
-        string specialSymbols = "!@#$%^&*()_+=-}{[]|;:<,>.?/";
+        string specialSymbols = "!@#$%^&*()_+=-}{[]|;<,>.?/";
         string unsafeChars = "‰‡ƒ…†ŠŒ•œ™Ÿ¡¥§µ¶¸¼½¾Ñÿþý";
         string genString = "";
         List<string> generatedPasswords = new List<string>();
+        byte[] key = { 7, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8 };
 
         public Form1()
         {
@@ -55,12 +56,17 @@ namespace neplosPasswordManager
             dataGridView1.Rows.Add(row);
         }
 
-        public static string returnEncrypted(string raw)
+        public static void returnEncrypted(string raw)
         {
-            using (AesManaged aes = new AesManaged())
+            try
             {
-                return Encoding.UTF8.GetString(Encrypt(raw, aes.Key, aes.IV));
+                using (AesManaged aes = new AesManaged())
+                {
+                    byte[] encrypted = Encrypt(raw, aes.Key, aes.IV);
+                    MessageBox.Show(System.Text.Encoding.UTF8.GetString(encrypted));
+                }
             }
+            catch { }
         }
 
         private static byte[] Encrypt(string raw, object p1, object p2)
@@ -68,61 +74,50 @@ namespace neplosPasswordManager
             throw new NotImplementedException();
         }
 
-        static byte[] Encrypt(string plain, byte[] key, byte[] iv)
+        public static byte[] Encrypt(byte[] data, byte[] key)
         {
-            byte[] encrypted;
-
-            using (AesManaged aes = new AesManaged())
+            using (AesCryptoServiceProvider csp = new AesCryptoServiceProvider())
             {
-                ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
-
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-                    {
-                        using (StreamWriter sw = new StreamWriter(cs))
-                        {
-                            sw.Write(plain);
-                            encrypted = ms.ToArray();
-                        }
-                    }
-                }
+                csp.KeySize = 256;
+                csp.BlockSize = 128;
+                csp.Key = key;
+                csp.Padding = PaddingMode.PKCS7;
+                csp.Mode = CipherMode.ECB;
+                ICryptoTransform encrypter = csp.CreateEncryptor();
+                return encrypter.TransformFinalBlock(data, 0, data.Length);
             }
-
-            return encrypted;
         }
 
-        private void neplosButton5_Click(object sender, EventArgs e)
+        private static string getString(byte[] b)
         {
-            if (openFileDialog1.ShowDialog() == DialogResult.OK)
-            {
-                fileName = openFileDialog1.FileName;
-
-                File.WriteAllText("data.txt", fileName);
-            }
+            return Encoding.UTF8.GetString(b);
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            if (!File.Exists("data.txt"))
-                File.Create("data.txt");
+            if (!File.Exists("neplosData.db"))
+                File.Create("neplosData.db");
 
-            filePath = File.ReadAllText("data.txt");
-            string data = File.ReadAllText(filePath);
-            string[] lines = File.ReadAllLines(filePath);
-            if (data.Contains(":"))
+            filePath = File.ReadAllText("neplosData.db");
+
+            string[] lines = File.ReadAllLines("neplosData.db");
+
+            if (lines != null)
             {
-                foreach (var line in lines)
+                if (filePath.Contains(":"))
                 {
-                    string[] array = line.Split(':');
+                    foreach (var line in lines)
+                    {
+                        string[] array = line.Split(':');
 
-                    string service = array[0];
-                    string username = array[1];
-                    string password = array[2];
-                    string hash = array[3];
+                        string service = array[0];
+                        string username = array[1];
+                        string password = array[2];
+                        string hash = array[3];
 
-                    row = new string[] { username, password, hash, service, "False" };
-                    dataGridView1.Rows.Add(row);
+                        row = new string[] { username, password, hash, service, "False" };
+                        dataGridView1.Rows.Add(row);
+                    }
                 }
             }
         }
@@ -144,7 +139,7 @@ namespace neplosPasswordManager
 
         private void neplosButton2_Click_1(object sender, EventArgs e)
         {
-            if((textBox6.Text == "" || textBox7.Text == ""))
+            if ((textBox6.Text == "" || textBox7.Text == ""))
             {
                 MessageBox.Show("Please set-up your password generator!");
                 return;
@@ -201,33 +196,24 @@ namespace neplosPasswordManager
 
         private void neplosButton7_Click(object sender, EventArgs e)
         {
-            if (fileName != "")
+            fileName = "neplosData.db";
+            using (StreamWriter sw = new StreamWriter(fileName))
             {
-                using (StreamWriter sw = new StreamWriter(fileName))
+                string username, password, service;
+                for (int i = 0; i < dataGridView1.Rows.Count - 1; i++)
                 {
-                    string username, password, service;
-                    for (int i = 0; i < dataGridView1.Rows.Count - 1; i++)
+                    try
                     {
-                        try
+                        username = dataGridView1.Rows[i].Cells[0].Value.ToString();
+                        password = dataGridView1.Rows[i].Cells[1].Value.ToString();
+                        service = dataGridView1.Rows[i].Cells[3].Value.ToString();
+
                         {
-                            username = dataGridView1.Rows[i].Cells[0].Value.ToString();
-                            password = dataGridView1.Rows[i].Cells[1].Value.ToString();
-                            service = dataGridView1.Rows[i].Cells[3].Value.ToString();
-
-                            //File.WriteAllText(fileName, service + ":" + username + ":" + password + ":");
-
-                            {
-                                sw.WriteLine(service + ":" + username + ":" + password + ":", i);
-                            }
+                            sw.WriteLine(service + ":" + username + ":" + password + ":", i);
                         }
-                        catch { }
                     }
+                    catch { }
                 }
-            }
-            else
-            {
-                MessageBox.Show("Please specify / create a file before saving the password");
-                return;
             }
         }
 
@@ -238,10 +224,38 @@ namespace neplosPasswordManager
 
         private void neplosButton3_Click(object sender, EventArgs e)
         {
-            foreach(var gen in generatedPasswords)
+            foreach (var gen in generatedPasswords)
             {
 
             }
+        }
+
+        private void checkBox8_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox8_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox9_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label9_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void neplosButton5_Click(object sender, EventArgs e)
+        {
+            byte[] data = Encoding.UTF8.GetBytes(textBox8.Text);
+            byte[] enc = Encrypt(data, key);
+
+            MessageBox.Show(getString(enc));
         }
     }
 }
