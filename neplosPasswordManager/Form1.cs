@@ -230,26 +230,6 @@ namespace neplosPasswordManager
             }
         }
 
-        private void checkBox8_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox8_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void checkBox9_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label9_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void neplosButton5_Click(object sender, EventArgs e)
         {
             byte[] data = Encoding.UTF8.GetBytes(textBox8.Text);
