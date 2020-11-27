@@ -5,7 +5,7 @@ Features:
 - Password generator
 
 Changelog:
-Recoded saving system entirely
+- Recoded saving system entirely
 
 To-Do list:
 - Password encryption
