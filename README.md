@@ -5,10 +5,9 @@ Features:
 - Password generator
 
 Changelog:
-- Recoded saving system entirely
+- Recoded password saving system entirely
 
 To-Do list:
 - Password encryption
-- Saving properties
 
 ![ScreenShot](https://i.imgur.com/FZXO6Rh.png)
